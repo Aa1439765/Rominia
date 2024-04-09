@@ -1,0 +1,78 @@
+
+local Players = game:GetService("Players")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.IgnoreGuiInset = true
+
+local buttonSize = UDim2.new(0, 100, 0, 50)
+local buttonMargin = 10
+
+local button = Instance.new("TextButton")
+button.Text = "ESP"
+button.Position = UDim2.new(1, -(buttonSize.X.Offset + buttonMargin), 0, buttonMargin)
+button.Size = buttonSize
+button.Parent = ScreenGui
+
+local espEnabled = false
+
+
+button.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        button.Text = "ESP: Açık"
+    else
+        button.Text = "ESP: Kapalı"
+    end
+end)
+
+local function createESP(player)
+    local espLabel = Instance.new("TextLabel")
+    espLabel.Text = player.Name
+    espLabel.Size = UDim2.new(0, 100, 0, 20)
+    espLabel.Position = UDim2.new(0, 0, 0, 0)
+    espLabel.TextColor3 = Color3.new(1, 0, 0) -- Kırmızı renk
+    espLabel.BackgroundTransparency = 1
+    espLabel.Visible = true
+    espLabel.Parent = ScreenGui
+
+    
+    local function updateESP()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local characterPosition = player.Character.HumanoidRootPart.Position
+            local screenPosition, isVisible = workspace.CurrentCamera:WorldToViewportPoint(characterPosition)
+            if isVisible then
+                espLabel.Position = UDim2.new(0, screenPosition.x, 0, screenPosition.y)
+                espLabel.Visible = true
+            else
+                espLabel.Visible = false
+            end
+        else
+            espLabel.Visible = false
+        end
+    end
+
+    
+    game:GetService("RunService").RenderStepped:Connect(updateESP)
+end
+
+local function deleteESPLabels()
+    for _, child in ipairs(ScreenGui:GetChildren()) do
+        if child:IsA("TextLabel") then
+            child:Destroy()
+        end
+    end
+end
+
+button.MouseButton1Click:Connect(function()
+    if espEnabled then
+        deleteESPLabels()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer then
+                createESP(player)
+            end
+        end
+    else
+        deleteESPLabels()
+    end
+end)
